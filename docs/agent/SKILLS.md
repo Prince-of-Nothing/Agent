@@ -44,12 +44,21 @@ with the same ID overrides a global one.
    manually and say which skill was unavailable. If no local process file
    exists, use the repository rules, state the limitation, and do not invent the
    skill's workflow.
+7. `ponytail` is standing: apply it on every coding task at the level the user
+   set (`lite`, `full` by default, `ultra`), alongside the task's process skill.
 
 ## 3. Installed skills
+
+> TODO for adopters: this table mirrors the kit author's OpenCode environment.
+> Keep the rows for skills the team installs and delete the rest, along with
+> any workflow reference that depends on them. Add repo-local skills under
+> `.opencode/skills/<id>/SKILL.md`. Follow the matching process file by hand
+> when a skill is not installed.
 
 | Skill ID | Load when | What it gives you |
 |---|---|---|
 | `using-superpowers` | When skill discovery is not already established | The rule that relevant skills must be invoked before acting |
+| `ponytail` | Every coding task: writing, fixing, refactoring, reviewing, or choosing dependencies | The smallest complete change, and the extras worth skipping |
 | `brainstorming` | Before any new feature, component, behavior change, or plan | Questions, approaches, a design document, and an approval gate |
 | `writing-plans` | After a design is approved and the work is multi-step | Bite-sized tasks with exact files, interfaces, tests, and commits |
 | `executing-plans` | You are implementing a plan yourself, task by task | A disciplined inline execution loop |

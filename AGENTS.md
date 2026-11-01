@@ -74,6 +74,8 @@ Skills may add detail but never relax a repository gate.
 
 - Behavior changes start with a failing test; non-behavior changes use the
   equivalent check: link check, config validation, dry run, or manual evidence.
+- Apply `ponytail` on every coding task: the smallest complete change, with no
+  unasked feature, abstraction, or dependency.
 - Debug from evidence (`systematic-debugging`). Review before merge
   (`requesting-code-review`) and verify feedback before implementing it
   (`receiving-code-review`).

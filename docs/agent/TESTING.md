@@ -5,6 +5,9 @@
 ## 1. Principles
 
 - Test behavior, not implementation details.
+- Test user-facing interactions and the logic that carries risk: parsing,
+  sync, matching, migrations, and state transitions.
+- Skip trivial passthroughs, prop plumbing, and generated boilerplate.
 - Every behavior bug fix starts with a regression test. A non-behavior fix uses
   the equivalent check: link check, config validation, dry run, or manual
   evidence.
@@ -174,3 +177,14 @@ If a check did not run, say so. If a pre-existing failure exists:
 3. Report both, and name any failure the change adds.
 
 Run `verification-before-completion` before any completion claim.
+
+## 12. Repository-specific testing notes
+
+> TODO for adopters: record the facts an agent cannot discover cheaply from the
+> repository. Useful entries are the test runner and its projects, where tests
+> live, shared render or fixture helpers to import instead of the library
+> defaults, modules that must be mocked at file scope, and any setup that
+> breaks in this repository. Keep it short. Link the canonical configuration
+> instead of copying it.
+
+TODO: `<repository-specific testing facts>`
