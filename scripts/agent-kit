@@ -1,0 +1,216 @@
+#!/usr/bin/env bash
+# agent-kit: scaffold OpenCode skills, plugins, and MCP servers.
+set -euo pipefail
+
+die() { printf 'error: %s\n' "$*" >&2; exit 1; }
+
+usage() {
+  cat <<'EOF'
+agent-kit - scaffold OpenCode extensions
+
+Usage:
+  agent-kit new skill <id> [--description "<when to use it>"] [--global]
+  agent-kit new plugin <id> [--global]
+  agent-kit new mcp <name> [--global] -- <command...>
+  agent-kit new mcp <name> [--global] --url <url>
+  agent-kit cli-anything [--global]
+  agent-kit help
+
+Without --global, files go under .opencode/ in the current directory and MCP
+entries go in ./opencode.json. With --global, they go under ~/.config/opencode/.
+
+Examples:
+  scripts/agent-kit new skill release-notes --description "Use when cutting a release"
+  scripts/agent-kit new plugin guard-branch
+  scripts/agent-kit new mcp github -- npx -y @modelcontextprotocol/server-github
+  scripts/agent-kit cli-anything
+EOF
+}
+
+# Print the OpenCode config root for the requested scope.
+scope() {
+  if [[ "$1" == true ]]; then printf '%s/.config/opencode' "$HOME"; else printf '.opencode'; fi
+}
+
+valid_id() {
+  [[ "$1" =~ ^[a-z][a-z0-9]*(-[a-z0-9]+)*$ ]] \
+    || die "id must be lowercase kebab-case and start with a letter: $1"
+}
+
+title_case() {
+  printf '%s' "$1" | tr '-' ' ' \
+    | awk '{ for (i = 1; i <= NF; i++) $i = toupper(substr($i, 1, 1)) substr($i, 2) } 1'
+}
+
+pascal_case() {
+  printf '%s' "$1" | awk -F- '{ for (i = 1; i <= NF; i++) printf "%s", toupper(substr($i, 1, 1)) substr($i, 2) }'
+}
+
+new_skill() {
+  local id='' desc='' global=false
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --description)
+        [[ $# -ge 2 ]] || die "--description needs a value"
+        desc=$2; shift 2 ;;
+      --global) global=true; shift ;;
+      -*) die "unknown option: $1" ;;
+      *) [[ -z $id ]] || die "unexpected argument: $1"; id=$1; shift ;;
+    esac
+  done
+  [[ -n $id ]] || die "missing <id>"
+  valid_id "$id"
+  [[ $desc != *$'\n'* ]] || die "--description must be one line"
+  [[ -n $desc ]] || desc="TODO: describe when to use the $id skill."
+  # Keep the frontmatter a valid double-quoted YAML scalar.
+  desc=${desc//\\/\\\\}
+  desc=${desc//\"/\\\"}
+
+  local dir file
+  dir="$(scope "$global")/skills/$id"
+  file="$dir/SKILL.md"
+  [[ -e $file ]] && die "already exists: $file"
+  mkdir -p "$dir"
+  cat >"$file" <<EOF
+---
+name: $(title_case "$id")
+description: "$desc"
+---
+
+# $(title_case "$id")
+
+## When to use
+
+- TODO: the requests that should trigger this skill.
+
+## Workflow
+
+1. TODO: first step.
+2. TODO: next step.
+
+## References
+
+- TODO: files or scripts beside this skill.
+EOF
+  printf 'created %s\n' "$file"
+}
+
+new_plugin() {
+  local id='' global=false
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --global) global=true; shift ;;
+      -*) die "unknown option: $1" ;;
+      *) [[ -z $id ]] || die "unexpected argument: $1"; id=$1; shift ;;
+    esac
+  done
+  [[ -n $id ]] || die "missing <id>"
+  valid_id "$id"
+
+  local name dir file
+  name=$(pascal_case "$id")
+  dir="$(scope "$global")/plugin"
+  file="$dir/$id.js"
+  [[ -e $file ]] && die "already exists: $file"
+  mkdir -p "$dir"
+  cat >"$file" <<EOF
+// OpenCode plugin, loaded from .opencode/plugin/ at startup.
+// Context and hooks: https://opencode.ai/docs/plugins
+export const $name = async ({ client, directory }) => {
+  return {
+    // Example: log every tool call.
+    // "tool.execute.before": async (input) => {
+    //   console.log(input.tool, input.args)
+    // },
+  }
+}
+EOF
+  printf 'created %s\n' "$file"
+}
+
+new_mcp() {
+  local name='' url='' global=false
+  local mcp_command=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --url)
+        [[ $# -ge 2 ]] || die "--url needs a value"
+        url=$2; shift 2 ;;
+      --global) global=true; shift ;;
+      --) shift; mcp_command=("$@"); break ;;
+      -*) die "unknown option: $1" ;;
+      *) [[ -z $name ]] || die "unexpected argument: $1"; name=$1; shift ;;
+    esac
+  done
+  [[ -n $name ]] || die "missing <name>"
+  valid_id "$name"
+  [[ -n $url || ${#mcp_command[@]} -gt 0 ]] || die "give -- <command...> or --url <url>"
+  [[ -z $url || ${#mcp_command[@]} -eq 0 ]] || die "use either -- <command...> or --url <url>, not both"
+  command -v opencode >/dev/null 2>&1 || die "opencode is required to add an MCP server"
+
+  # Let OpenCode write its own config: it handles JSONC and the current format.
+  local args=(mcp add)
+  [[ $global == true ]] && args+=(--global)
+  if [[ -n $url ]]; then
+    args+=(--url "$url" "$name")
+  else
+    args+=("$name" --)
+    args+=("${mcp_command[@]}")
+  fi
+  opencode "${args[@]}"
+}
+
+install_cli_anything() {
+  local global=false
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --global) global=true; shift ;;
+      -*) die "unknown option: $1" ;;
+      *) die "unexpected argument: $1" ;;
+    esac
+  done
+  command -v git >/dev/null 2>&1 || die "git is required"
+
+  local root target
+  root=$(scope "$global")
+  target="$root/commands"
+  # OpenCode before the commands/ rename used command/.
+  [[ -d $target || ! -d $root/command ]] || target="$root/command"
+
+  # Sparse + blobless: the repo is huge, we need six files.
+  tmp=$(mktemp -d)
+  if ! git clone --depth 1 --quiet --filter=blob:none --sparse \
+      https://github.com/HKUDS/CLI-Anything.git "$tmp/repo"; then
+    rm -rf "$tmp"
+    die "could not clone CLI-Anything (network or git error)"
+  fi
+  if ! git -C "$tmp/repo" sparse-checkout set opencode-commands cli-anything-plugin; then
+    rm -rf "$tmp"
+    die "could not check out CLI-Anything commands"
+  fi
+
+  mkdir -p "$target"
+  cp "$tmp/repo"/opencode-commands/*.md "$target/"
+  cp "$tmp/repo/cli-anything-plugin/HARNESS.md" "$target/"
+  rm -rf "$tmp"
+  printf 'installed CLI-Anything commands into %s\n' "$target"
+  printf 'next: run /cli-anything <path-or-repo> in OpenCode\n'
+}
+
+cmd=${1:-help}
+[[ $# -gt 0 ]] && shift
+
+case "$cmd" in
+  new)
+    sub=${1:-}
+    [[ -n $sub ]] && shift
+    case "$sub" in
+      skill) new_skill "$@" ;;
+      plugin) new_plugin "$@" ;;
+      mcp) new_mcp "$@" ;;
+      *) die "unknown 'new' target: ${sub:-<missing>} (try: agent-kit help)" ;;
+    esac ;;
+  cli-anything) install_cli_anything "$@" ;;
+  help|-h|--help) usage ;;
+  *) die "unknown command: $cmd (try: agent-kit help)" ;;
+esac

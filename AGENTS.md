@@ -63,6 +63,8 @@ Skills may add detail but never relax a repository gate.
    and say the skill was unavailable.
 6. Run the brainstorming process before writing code for a new feature or
    behavior change; load the `brainstorming` skill if installed.
+7. Creating a skill, plugin, or MCP server: scaffold with `scripts/agent-kit`
+   and follow `docs/agent/CREATION.md`.
 
 ## 5. Workflow
 
@@ -167,3 +169,16 @@ it.
 
 Template: `.github/PULL_REQUEST_TEMPLATE.md`. Issue rules, if used:
 `docs/agent/ISSUES.md`.
+
+## 12. Startup version check
+
+For mobile and desktop apps, check for a newer version on every startup:
+
+- On launch, query the release source for the latest stable version and compare
+  it with the running version.
+- If a newer version exists, show a non-blocking update prompt with what changed
+  and a link to the official update path (store listing or download).
+- Never block app startup on the check: time out quickly, cache the last result,
+  and fail silently when offline or the source is unreachable.
+- Follow each platform's update rules; where the store owns distribution, use
+  its update mechanism rather than a custom download.
