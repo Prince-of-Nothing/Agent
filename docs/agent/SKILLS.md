@@ -68,6 +68,7 @@ with the same ID overrides a global one.
 | `graphify` | A question about codebase structure, relationships, or architecture | Build, query, path, explain, and report on a knowledge graph |
 | `mcp-builder` | Building an MCP server in Python or TypeScript | Protocol guidance, tool design, schemas, and testing |
 | `skill-creator` | Creating, editing, or evaluating a skill | Skill structure, description optimization, and evals |
+| `skill-scout` | No installed skill covers a task and one must come from the web | Gap check, search, vetting, safe install, verification |
 | `writing-skills` | Authoring or verifying a skill before deployment | Portable skill format and verification workflow |
 | `stop-slop` | Drafting or editing prose for humans | Removal of filler, passive voice, and formulaic AI patterns |
 | `reverse-engineer-anything` | A shipped binary, Electron app, firmware, or browser target needs analysis | REA workflow and evidence-backed reconstruction |
@@ -120,6 +121,8 @@ security boundary.
 
 ### Skill or MCP work
 
+- Missing skill: `skill-scout` to find, vet, and install one; if nothing
+  trustworthy fits, write it with `skill-creator`.
 - New or revised skill: `skill-creator` to design, edit, and evaluate it, then
   `writing-skills` to verify portability and deployment readiness.
 - New MCP server: `mcp-builder`, then test it with a real client.
@@ -138,6 +141,9 @@ security boundary.
 
 Use a project skill when a procedure is specific to this repository and recurs:
 release steps, migration steps, deployment, or a domain checklist.
+
+Scaffold it with `scripts/agent-kit new skill <id> --description "..."`, then
+replace the `TODO`s. Template and rules follow.
 
 ```markdown
 ---

@@ -19,6 +19,9 @@ compatible harnesses.
 | `docs/agent/TESTING.md` | Test strategy, TDD loop, how to discover and run the real gates. |
 | `docs/agent/COMMITS.md` | Branch, commit, PR checklist, release, and changelog rules. |
 | `docs/agent/SKILLS.md` | Router for all installed skills, plus how to add repo-local ones. |
+| `docs/agent/CREATION.md` | Scaffolding skills, plugins, MCP servers, and CLI-Anything harnesses. |
+| `scripts/agent-kit` | Scaffolding CLI for skills, plugins, MCP config, and CLI-Anything commands. |
+| `.opencode/skills/skill-scout/` | Finds, vets, and installs a web skill when none is installed. |
 | `docs/agent/GRAPHIFY.md` | When and how to build, query, and refresh the code knowledge graph. |
 | `docs/agent/ARCHITECTURE.md` | Fill-in module map, dependency rules, and invariants. |
 | `docs/agent/ISSUES.md` | Issue types, IDs, severity, priority, labels, triage. |
@@ -33,6 +36,8 @@ compatible harnesses.
 3. The topic file for the work: testing, commits, architecture, issues, or
    graphify.
 4. `docs/agent/SKILLS.md`, when choosing a skill or adding one.
+5. `docs/agent/CREATION.md`, when adding a skill, plugin, or MCP server, or
+   when turning a tool into an agent-native CLI.
 
 ## Adopt it in five steps
 
@@ -56,11 +61,28 @@ compatible harnesses.
 
 Run one small real task before trusting the kit on a large one.
 
+## Create skills, plugins, and MCP servers
+
+`scripts/agent-kit` writes the boilerplate so the agent edits content instead of
+reinventing paths:
+
+```bash
+scripts/agent-kit new skill release-notes --description "Use when cutting a release"
+scripts/agent-kit new plugin guard-branch
+scripts/agent-kit new mcp github -- npx -y @modelcontextprotocol/server-github
+scripts/agent-kit cli-anything        # CLI-Anything slash commands for OpenCode
+```
+
+Add `--global` to write under `~/.config/opencode/`. `cli-anything` installs the
+[CLI-Anything](https://github.com/HKUDS/CLI-Anything) commands, so
+`/cli-anything <path-or-repo>` can generate an agent-native CLI for software
+that only has a GUI. Details and verification: `docs/agent/CREATION.md`.
+
 ## Optional modules
 
-Graphify, the skills router, and the PR checklist are integrated by default. If
-the repository will not use one, remove it and its references together. After
-any removal, run a link check and:
+Graphify, the skills router, the skill scout, and the PR checklist are
+integrated by default. If the repository will not use one, remove it and its
+references together. After any removal, run a link check and:
 
 ```bash
 rg -n '\b(GRAPHIFY|SKILLS|ISSUES|ADR|pr-checklist)\b' .
@@ -74,6 +96,7 @@ Resolve every hit that points at the removed module.
 | ADRs | `docs/adr/`; ADR rule in `AGENTS.md` section 8; decision links in `ARCHITECTURE.md` sections 10 and 11; README layout | Record decisions in `docs/agent/ARCHITECTURE.md` |
 | Knowledge graph | `docs/agent/GRAPHIFY.md`; graph section in `AGENTS.md` section 7; graph step in `WORKFLOW.md` section 2; graphify row and recipe in `SKILLS.md`; graphify mentions in `README.md` | Use search and targeted reads |
 | Skills router | `docs/agent/SKILLS.md`; skill step in `AGENTS.md` section 4; skill links in `WORKFLOW.md`, `TESTING.md`, and `COMMITS.md` | Follow the process docs manually; if no process file exists, use the repository rules and say the skill was unavailable |
+| Skill scout | `.opencode/skills/skill-scout/`; its row and recipe in `SKILLS.md`; map row in this README | Find and vet a skill by hand, or write one locally |
 | PR checklist | PR checklist in `docs/agent/COMMITS.md`; checklist in `.github/PULL_REQUEST_TEMPLATE.md`; checklist link in `AGENTS.md` section 11; reference in `WORKFLOW.md` section 8 | Use the three-item definition of done in `AGENTS.md` section 11 |
 
 Also remove the module from the file map and layout in this README.
@@ -132,12 +155,20 @@ stale instruction is worse than a missing one because it sounds authoritative.
 │       ├── bug_report.md
 │       ├── feature_request.md
 │       └── task.md
+├── .opencode/
+│   └── skills/
+│       └── skill-scout/
+│           └── SKILL.md
+├── scripts/
+│   ├── agent-kit
+│   └── agent-kit.test.sh
 └── docs/
     ├── agent/
     │   ├── WORKFLOW.md
     │   ├── TESTING.md
     │   ├── COMMITS.md
     │   ├── SKILLS.md
+    │   ├── CREATION.md
     │   ├── GRAPHIFY.md
     │   ├── ARCHITECTURE.md
     │   └── ISSUES.md
